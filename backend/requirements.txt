@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pandas
+numpy
+python-multipart
+google-generativeai
+pydantic
+python-dotenv
+python-jose[cryptography]
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.2
+stripe
