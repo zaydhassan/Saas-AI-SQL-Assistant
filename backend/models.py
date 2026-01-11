@@ -13,7 +13,7 @@ class User(Base):
     name = Column(String, nullable=True)
     password_hash = Column(String, nullable=False)
 
-    profile_image = Column(String, nullable=True)  # ✅ profile avatar
+    profile_image = Column(String, nullable=True) 
 
     is_pro = Column(Boolean, default=False)
     stripe_customer_id = Column(String, nullable=True)
