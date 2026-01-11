@@ -9,7 +9,7 @@ import RecentQueries from "@/components/dashboard/RecentQueries";
 export default function DashboardPage() {
   return (
     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-8 space-y-10">
-      {/* Header */}
+    
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold text-white">
           Analytics Overview
@@ -19,10 +19,8 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* KPI */}
       <KPICards />
 
-      {/* Charts */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <div className="xl:col-span-8">
           <UsageChart />
@@ -32,10 +30,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* AI Insights */}
       <AIInsights />
 
-      {/* Recent Queries */}
       <RecentQueries />
     </div>
   );
