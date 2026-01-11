@@ -46,7 +46,7 @@ class Query(Base):
     sql = Column(String, nullable=False)
     result_json = Column(JSON, nullable=False)
 
-    execution_time_ms = Column(Float, nullable=True)  # ✅ analytics
+    execution_time_ms = Column(Float, nullable=True)  
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
