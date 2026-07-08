@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Database, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import GlassCard from "./GlassCard";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+import { motion } from "framer-motion";
+import EmptyState from "@/components/ui/empty-state";
+import Link from "next/link";
+import { apiFetch, ApiError } from "@/lib/api";
 
 type Dataset = {
   id: number;
@@ -17,30 +18,15 @@ export default function DatasetsList() {
   const [loading, setLoading] = useState(true);
 
   async function loadDatasets() {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      setDatasets([]);
-      setLoading(false);
-      return;
-    }
-
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/datasets`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, 
-          },
-        }
-      );
-
-      if (!res.ok) throw new Error();
-
-      const data = await res.json();
+      const data = await apiFetch<Dataset[]>(`/api/datasets`);
       setDatasets(data);
-    } catch {
-      toast.error("Failed to load datasets");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setDatasets([]); // not logged in
+      } else {
+        toast.error("Failed to load datasets");
+      }
     } finally {
       setLoading(false);
     }
@@ -48,30 +34,15 @@ export default function DatasetsList() {
 
   useEffect(() => {
     loadDatasets();
-
     window.addEventListener("dataset-updated", loadDatasets);
-
     return () => {
       window.removeEventListener("dataset-updated", loadDatasets);
     };
   }, []);
 
   const removeDataset = async (id: number, name: string) => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
-
     try {
-      const res = await fetch(
-        `${API_BASE}/api/datasets/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`, 
-          },
-        }
-      );
-
-      if (!res.ok) throw new Error();
+      await apiFetch(`/api/datasets/${id}`, { method: "DELETE" });
       setDatasets((prev) => prev.filter((d) => d.id !== id));
 
       toast.success("Dataset removed", {
@@ -85,57 +56,65 @@ export default function DatasetsList() {
   };
 
   return (
-    <GlassCard>
-      <h3 className="mb-4">Your Datasets</h3>
+    <div className="glass-static rounded-[var(--radius-2xl)] p-7">
+      <div className="mb-5 flex items-center gap-2.5">
+        <Database size={16} className="text-[var(--accent)]" />
+        <h3 className="text-lg font-semibold text-white">Your Datasets</h3>
+      </div>
 
-      {loading && (
-        <p className="muted text-sm">Loading datasets…</p>
-      )}
-
-      {!loading && datasets.length === 0 && (
-        <p className="muted text-sm">
-          No datasets uploaded yet
-        </p>
-      )}
-
-      <ul className="space-y-2">
-        {datasets.map((d) => (
-          <li
-            key={d.id}
-            className="
-              group flex items-center justify-between
-              rounded-lg border border-white/10
-              px-4 py-3
-              hover:bg-white/5 transition
-            "
-          >
-            <a
-              href={`/datasets/${d.id}`}
-              className="flex flex-col"
+      {loading ? (
+        <div className="space-y-2.5">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="skeleton shimmer h-14 w-full rounded-[var(--radius-md)]" />
+          ))}
+        </div>
+      ) : datasets.length === 0 ? (
+        <EmptyState
+          icon={<Database size={26} />}
+          title="No datasets yet"
+          description="Upload your first CSV to start asking questions in plain English."
+        />
+      ) : (
+        <ul className="space-y-2.5">
+          {datasets.map((d, i) => (
+            <motion.li
+              key={d.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="group flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3.5 transition-colors hover:bg-white/5"
+              style={{ border: "1px solid var(--border-soft)" }}
             >
-              <span className="font-medium">
-                📊 {d.name}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Ready for questions
-              </span>
-            </a>
+              <Link href={`/datasets/${d.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg text-white" style={{ background: "var(--gradient-brand-soft)", border: "1px solid var(--border)" }}>
+                  <Database size={15} />
+                </span>
+                <div className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-white">{d.name}</span>
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>Ready for questions</span>
+                </div>
+              </Link>
 
-            <button
-              onClick={() => removeDataset(d.id, d.name)}
-              className="
-                text-muted-foreground
-                hover:text-red-400
-                opacity-0 group-hover:opacity-100
-                transition
-              "
-              title="Remove dataset"
-            >
-              <Trash2 size={18} />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </GlassCard>
+              <div className="flex items-center gap-1">
+                <Link
+                  href={`/datasets/${d.id}`}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] opacity-0 transition-opacity hover:text-white group-hover:opacity-100"
+                >
+                  <ArrowRight size={15} />
+                </Link>
+                <button
+                  onClick={() => removeDataset(d.id, d.name)}
+                  title="Remove dataset"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] opacity-0 transition-all hover:text-red-400 group-hover:opacity-100"
+                  style={{ boxShadow: "none", background: "transparent" }}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </motion.li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

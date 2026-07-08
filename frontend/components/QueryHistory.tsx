@@ -1,23 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
+import { apiFetch } from "@/lib/api";
 
 export default function QueryHistory({ datasetId }: { datasetId: string }) {
   const [queries, setQueries] = useState<any[]>([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    fetch(`${API_BASE}/api/datasets/${datasetId}/queries`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(res => res.json())
-      .then(setQueries);
+    apiFetch<any[]>(`/api/datasets/${datasetId}/queries`)
+      .then(setQueries)
+      .catch(() => setQueries([]));
   }, [datasetId]);
 
   return (

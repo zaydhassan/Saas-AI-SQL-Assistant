@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { Copy, Save, X, CheckCircle2, XCircle, History } from "lucide-react";
+import EmptyState from "@/components/ui/empty-state";
 
 type QueryRow = {
   sql: string;
@@ -10,40 +13,44 @@ type QueryRow = {
   status: string;
 };
 
+const FILTERS = ["All", "Success", "Failed"] as const;
+
 export default function RecentQueries() {
   const [rows, setRows] = useState<QueryRow[]>([]);
   const [selectedSQL, setSelectedSQL] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
 
   useEffect(() => {
     apiFetch<QueryRow[]>("/api/analytics/recent-queries")
-      .then(setRows)
+      .then((r) => setRows(Array.isArray(r) ? r : []))
       .catch(() => {
         toast.error("Failed to load recent queries");
-      });
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+  const visible = rows.filter((r) =>
+    filter === "All" ? true : filter === "Success" ? r.status === "Success" : r.status !== "Success"
+  );
 
   async function copySQL() {
     if (!selectedSQL) return;
-
     await navigator.clipboard.writeText(selectedSQL);
-
     toast.success("SQL copied to clipboard");
   }
 
   async function saveAsReport() {
     if (!selectedSQL) return;
-
     try {
       setSaving(true);
-
       await apiFetch("/api/reports", {
         method: "POST",
         body: JSON.stringify({
           sql: selectedSQL,
         }),
       });
-
       toast.success("Query saved as report");
     } catch {
       toast.error("Failed to save report");
@@ -54,109 +61,147 @@ export default function RecentQueries() {
 
   return (
     <>
-      {/* CARD */}
-      <div className="rounded-xl bg-white/5 p-6 border border-white/10">
-        <h3 className="text-white mb-4">Recent Queries</h3>
-
-        {rows.length === 0 ? (
-          <p className="text-sm text-neutral-400">No queries yet</p>
-        ) : (
-          <table className="w-full text-sm table-fixed">
-            <thead className="text-neutral-500 uppercase text-xs">
-              <tr>
-                <th className="text-left py-2 w-[60%]">SQL</th>
-                <th className="text-center w-[20%]">Time</th>
-                <th className="text-center w-[20%]">Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {rows.map((r, i) => (
-                <tr
-                  key={i}
-                  onClick={() => setSelectedSQL(r.sql)}
-                  className="border-t border-white/10 hover:bg-white/5 transition cursor-pointer"
+      <div className="surface-3 hairline rounded-[var(--radius-xl)] p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <History size={16} className="text-[var(--accent)]" />
+            <h3 className="text-[15px] font-semibold text-white">Recent Queries</h3>
+            {!loading && rows.length > 0 && (
+              <span
+                className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                style={{ background: "rgba(255,255,255,0.06)", color: "var(--muted)" }}
+              >
+                {rows.length}
+              </span>
+            )}
+          </div>
+          {!loading && rows.length > 0 && (
+            <div className="seg">
+              {FILTERS.map((f) => (
+                <button
+                  key={f}
+                  aria-selected={filter === f}
+                  onClick={() => setFilter(f)}
+                  className="seg-item"
                 >
-                  <td className="py-2 text-neutral-300 truncate whitespace-nowrap overflow-hidden">
-                    <span className="hover:text-purple-400">
-                      {r.sql}
-                    </span>
-                  </td>
-
-                  <td className="text-center text-neutral-300">
-                    {r.time}
-                  </td>
-
-                  <td
-                    className={`text-center font-medium ${
-                      r.status === "Success"
-                        ? "text-green-400"
-                        : "text-red-400"
-                    }`}
-                  >
-                    {r.status}
-                  </td>
-                </tr>
+                  {f}
+                </button>
               ))}
-            </tbody>
-          </table>
+            </div>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="space-y-2">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="skeleton shimmer h-10 w-full rounded-[var(--radius-sm)]" />
+            ))}
+          </div>
+        ) : rows.length === 0 ? (
+          <EmptyState
+            icon={<History size={26} />}
+            title="No queries yet"
+            description="Your recent SQL queries will appear here once you start asking questions."
+          />
+        ) : (
+          <div className="table-wrap">
+            <table className="simple-table">
+              <thead>
+                <tr>
+                  <th className="w-[60%]">SQL</th>
+                  <th className="w-[20%] text-center">Time</th>
+                  <th className="w-[20%] text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((r, i) => (
+                  <tr key={i} onClick={() => setSelectedSQL(r.sql)} style={{ cursor: "pointer" }}>
+                    <td className="truncate">{r.sql}</td>
+                    <td className="text-center" style={{ fontFamily: "var(--font-sans)" }}>{r.time}</td>
+                    <td className="text-center">
+                      <span
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+                        style={{
+                          background: r.status === "Success" ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
+                          color: r.status === "Success" ? "#34d399" : "#f87171",
+                          fontFamily: "var(--font-sans)",
+                        }}
+                      >
+                        {r.status === "Success" ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                        {r.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
-      {/* SQL MODAL */}
-      {selectedSQL && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={() => setSelectedSQL(null)}
-        >
-          <div
-            className="w-full max-w-3xl bg-[#0b1020] border border-white/10 rounded-xl shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+      {/* SQL modal */}
+      <AnimatePresence>
+        {selectedSQL && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedSQL(null)}
           >
-            {/* HEADER */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-              <h4 className="text-white font-medium">SQL Query</h4>
-              <button
-                onClick={() => setSelectedSQL(null)}
-                className="text-neutral-400 hover:text-white text-xl"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* BODY */}
-            <div className="p-6 max-h-[60vh] overflow-auto">
-              <pre className="text-sm text-emerald-300 whitespace-pre-wrap wrap-break-word font-mono">
-{selectedSQL}
-              </pre>
-            </div>
-
-            {/* FOOTER */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-white/10">
-              <span className="text-xs text-neutral-400">
-                Click outside or × to close
-              </span>
-
-              <div className="flex gap-2">
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 14, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full max-w-3xl overflow-hidden rounded-[var(--radius-xl)]"
+              style={{
+                background: "rgba(10,14,35,0.96)",
+                border: "1px solid var(--border-soft)",
+                backdropFilter: "blur(20px)",
+                boxShadow: "0 40px 100px rgba(0,0,0,0.7)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--border-soft)" }}>
+                <h4 className="font-medium text-white">SQL Query</h4>
                 <button
-                  onClick={copySQL}
-                  className="px-4 py-2 rounded-md bg-neutral-700 hover:bg-neutral-600 text-white text-sm"
+                  onClick={() => setSelectedSQL(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] hover:text-white"
+                  style={{ boxShadow: "none", background: "transparent" }}
                 >
-                  Copy SQL
-                </button>
-
-                <button
-                  disabled={saving}
-                  onClick={saveAsReport}
-                  className="px-4 py-2 rounded-md bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm"
-                >
-                  {saving ? "Saving..." : "Save as Report"}
+                  <X size={18} />
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="max-h-[55vh] overflow-auto p-6">
+                <pre className="text-sm whitespace-pre-wrap break-words text-emerald-300" style={{ fontFamily: "var(--font-mono)" }}>
+                  {selectedSQL}
+                </pre>
+              </div>
+              <div className="flex items-center justify-between px-6 py-4" style={{ borderTop: "1px solid var(--border-soft)" }}>
+                <span className="text-xs" style={{ color: "var(--muted)" }}>Click outside to close</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={copySQL}
+                    className="flex items-center gap-2 rounded-[var(--radius-sm)] px-4 py-2 text-sm text-white"
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)", boxShadow: "none" }}
+                  >
+                    <Copy size={14} /> Copy
+                  </button>
+                  <button
+                    disabled={saving}
+                    onClick={saveAsReport}
+                    className="flex items-center gap-2 rounded-[var(--radius-sm)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                    style={{ background: "var(--gradient-brand)", boxShadow: "0 10px 28px var(--accent-glow)" }}
+                  >
+                    <Save size={14} /> {saving ? "Saving…" : "Save as Report"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

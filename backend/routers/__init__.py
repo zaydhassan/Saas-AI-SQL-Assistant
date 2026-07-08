@@ -1,0 +1,1 @@
+"""BI Copilot routers. Thin delegators over the service layer."""

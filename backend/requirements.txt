@@ -7,8 +7,16 @@ numpy
 python-multipart
 google-generativeai
 pydantic
+email-validator
 python-dotenv
 python-jose[cryptography]
 passlib[bcrypt]==1.7.4
 bcrypt==4.1.2
+argon2-cffi
+pydantic-settings
 stripe
+alembic
+apscheduler
+openpyxl
+reportlab
+python-pptx
