@@ -68,7 +68,6 @@ export default function AIInsights() {
           </li>
         ))}
       </ul>
-
       <a
         href="/insights"
         className="mt-4 flex items-center justify-between rounded-xl p-3 text-[13px] font-medium text-white transition-colors"
