@@ -117,8 +117,8 @@ Stripe Webhooks (Subscription Updates)
 ### 📥 Clone the Repository
 
 ```bash
-git clone https://github.com/zaydhassan/sql-assistant.git
-cd sql-assistant
+git clone https://github.com/zaydhassan/Saas-AI-SQL-Assistant.git
+cd Saas-AI-SQL-Assistant
 
 🔧 Backend Setup
 
