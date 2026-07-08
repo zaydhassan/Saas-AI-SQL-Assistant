@@ -85,6 +85,7 @@ export default function FooterDemo({ isLoggedIn }: { isLoggedIn?: boolean } = {}
                 type="email"
                 placeholder="Enter your email"
                 className="pr-12"
+                suppressHydrationWarning
                 style={{
                   background: "rgba(255,255,255,0.04)",
                   borderColor: "var(--border-soft)",
@@ -94,6 +95,7 @@ export default function FooterDemo({ isLoggedIn }: { isLoggedIn?: boolean } = {}
                 type="submit"
                 size="icon"
                 className="absolute right-1 top-1 h-8 w-8 rounded-full"
+                suppressHydrationWarning
               >
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Subscribe</span>
