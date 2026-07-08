@@ -52,7 +52,7 @@ export default function ForecastChart({
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       style={{ width: "100%", height }}
     >
-      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+      <ResponsiveContainer width="100%" height={height} minWidth={0} minHeight={height}>
         <ComposedChart data={data} margin={{ top: 10, right: 16, left: -8, bottom: 0 }}>
           <defs>
             <linearGradient id="fcBand" x1="0" y1="0" x2="0" y2="1">
