@@ -355,7 +355,7 @@ function HeroPreview() {
         <div className="mt-4 rounded-[var(--radius-md)] p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--border-soft)" }}>
           <p className="mb-1 text-xs" style={{ color: "var(--muted)" }}>Query volume</p>
           <div style={{ height: 120 }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -28, bottom: 0 }}>
                 <defs>
                   <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">

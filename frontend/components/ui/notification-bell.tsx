@@ -141,10 +141,19 @@ export default function NotificationBell() {
         type="button"
         aria-label="Notifications"
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-white transition-colors hover:bg-white/15"
-        style={{ boxShadow: "none", background: "rgba(99,102,241,0.18)", border: "1px solid rgba(99,102,241,0.35)" }}
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg text-white transition-colors hover:bg-white/20"
+        style={{
+          boxShadow: "0 0 0 1px rgba(255,255,255,0.12), 0 8px 24px rgba(99,102,241,0.25)",
+          background: "linear-gradient(135deg, rgba(99,102,241,0.55), rgba(139,92,246,0.45))",
+          border: "1px solid rgba(255,255,255,0.22)",
+        }}
       >
-        <Bell size={18} fill="currentColor" strokeWidth={1.5} className="text-white" />
+        <Bell
+          size={20}
+          fill="currentColor"
+          strokeWidth={1.5}
+          className="text-white drop-shadow-[0_0_5px_rgba(255,255,255,0.65)]"
+        />
         {unread > 0 && (
           <span
             className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
